@@ -7,24 +7,11 @@
         {
             "type": "node",
             "request": "launch",
-            "name": "test yarg obj",
-            "program": "${workspaceFolder}/src/test-yargs-obj.mjs",
-            "console": "internalConsole",
-            "outputCapture": "std",
-            "args":[
-                "--bar", "BAR",
-                "--baz", "BAZ"
-            ],
-            "runtimeArgs": ["--experimental-modules"]
-        },
-        {
-            "type": "node",
-            "request": "launch",
             "name": "cli",
             "program": "${workspaceFolder}/src/reversible-preproc-cli.mjs",
             "console": "internalConsole",
             "outputCapture": "std",
-            "args": [ "pp", 
+            "args": [  
                 "-i", "${workspaceFolder}/test/data/test-data.js" ,
                 "-o", "${workspaceFolder}/test/data/test-data.out.js", 
                 "-f", "${workspaceFolder}/test/data/test-defines.json"
@@ -38,10 +25,11 @@
             "program": "${workspaceFolder}/src/reversible-preproc-cli.mjs",
             "console": "internalConsole",
             "outputCapture": "std",
-            "args": [ "pp",
+            "args": [
                 "-i", "${workspaceFolder}/test/data/test-data.js" ,
                 //"-o", "${workspaceFolder}/test/data/test-data.out.js", 
-                "-l", "\"*\""
+                "-l", "\"*\"",
+                "-t"
             ],
             "runtimeArgs": ["--experimental-modules"]
         },

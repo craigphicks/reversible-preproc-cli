@@ -1,75 +1,122 @@
+/* eslint-disable no-unused-vars */
+/* eslint-disable no-useless-escape */
 `use strict`
 
 import ReversiblePreproc from 'reversible-preproc'
-import yargs from 'yargs'
 import split2 from 'split2'
 import through2 from 'through2'
 import fs from 'fs'
 import events from 'events'
-import { pipeline, finished } from 'stream'
-import util from 'util'
+//import { pipeline, finished } from 'stream'
+//import util from 'util'
 import parseArgs from 'minimist'
-import dedent from 'dedent'
+//import dedent from 'dedent'
 
-var progArgs = process.argv.slice(2)
-console.log('progArgs: ', progArgs)
+//console.log('process.argv: ')
+//console.log(process.argv)
 
-// const ya=yargs
-//     .command('pp', 'perform reversible pre proc on file', {
-//         infile: {
-//             description: 'input file',
-//             alias: 'i',
-//             type: 'string',
-//         },
-//         outfile: {
-//             description: 'output file',
-//             alias: 'o',
-//             type: 'string',
-//         },
-//         defline: {
-//             description: 'json to use as defines, passed as string',
-//             alias: 'l',
-//             type: 'string'
-//         },
-//         deffile: {
-//             description: 'json to use as defines, read from file',
-//             alias: 'f',
-//             type: 'string'
-//         }
-//     })
-//     .help()
-//     .alias('help', 'h')
+const argvMm = parseArgs(process.argv)
+//console.dir(argvMm)
 
-// const ya1 = ya.argv
+const margv = new Map
+margv.set('i', 'infile')
+margv.set('o', 'outfile')
+margv.set('f', 'deffile')
+margv.set('l', 'defline')
+margv.set('t', 'testout')
+margv.set('infile', 'infile')
+margv.set('outfile', 'outfile')
+margv.set('deffile', 'deffile')
+margv.set('defline', 'defline')
+margv.set('testout', 'testout')
+
+const argv = {}
+function readArgs() {
+    try {
+        let numdef = 0
+        for (let k of Reflect.ownKeys(argvMm)) {
+            if (k === '_') continue
+            let kt = margv.get(k)
+            if (kt === undefined)
+                throw `${k} is not a valid argument`
+            if (Reflect.ownKeys(argv).includes(k)) {
+                throw `${k} or alias has already been given as argument`
+            }
+            if (kt === 'defline' || kt === 'deffile')
+                numdef++
+            argv[kt] = argvMm[k]
+        }
+        if (numdef != 1) {
+            throw 'defines must be specified exactly once with --deffile or --defline'
+        }
+    }
+    catch (e) {
+        console.log(e)
+        showHelp()
+    }
+}
+readArgs()
+//console.log(argv)
 
 
-function showHelp(){
-let tpl = dedent`
-The preprocessor has two inputs.  
-The main input is the file to be transformed.  This file is embedded 
-with conditonal statements to switch on or off sections of code.
-The conditiona statements depend upon variables which are defined 
-in the second input, which is JSON data.  This JSON data may be input 
-through a file or directly on the command line.  We call this JSON
-data the 'defines'.
+function showHelp() {
+    process.stdout.write(helpTpl())
+}
 
-To switch off a section of code it preceded with annotated comments '//!!'
-E.g.
-    A day in the park
-becomes
-    //!!A day in the park
+async function PreProc(rpp, readable, writable, testOut) {
+    function makeThroughLineFunc(rpp) {
+        return (line, enc, next) => {
+            //console.log(line)
+            let [err, outline] = rpp.line(line)
+            //console.log(outline)
+            outline = outline===null ? "" : outline + '\n'
+            next(err, outline)
+        }
+    }
+    await events.once(
+        readable
+            .pipe(split2())
+            .pipe(through2.obj(makeThroughLineFunc(rpp)))
+            .pipe(writable),
+        'finish')
+}
 
-For a given 'defines', the preprocessor is idempotent, which means
-running it twice will have no effect on the second pass.
+function ownKey(o, k) { return Reflect.ownKeys(o).includes(k) }
+function defined(x) { return x !== undefined }
+{
 
-The processing is reversible in the sense that commented data is not removed,
-and the state once reached with defines 'A' can always be reached again by 
-re-applying defines 'A', no matter what defines were applied inbetween.
+//    console.log(argv)
+    // set up streams
+    let rawdata, readable, writable
+    if (argv.deffile !== undefined) {
+        rawdata = fs.readFileSync(argv.deffile)
+    } else if (argv.defline !== undefined) {
+        rawdata = argv.defline
+    } else {
+        throw Error('json define data not provided but is required')
+    }
+    let defJson = JSON.parse(rawdata)
+//    console.log("The defines input is:")
+//    console.log(JSON.stringify(defJson, 0, 2))
+    let testOut = Reflect.ownKeys(argv).includes('testout')
+    let rpp = new ReversiblePreproc(defJson, { testMode: testOut })
 
-The special defines "*" removes all annoted comments regardless of the 
-controlling conditional statements.  This is useful for producing 
-a canonical state, even though that state may not be be valid script.
+    if (argv.infile !== undefined) {
+        readable = fs.createReadStream(argv.infile)
+    } else { // use stdin
+        readable = process.stdin   // ???
+    }
+    if (argv.outfile !== undefined) {
+        writable = fs.createWriteStream(argv.outfile)
+    } else { // use stdin
+        writable = process.stdout   // ???
+    }
+    PreProc(rpp, readable, writable, testOut)
+}
 
+function helpTpl() {
+    return `
+Command line argumentsa:
 
 -i --infile <filename> 
     The file to be transformed.  If omitted stdin will be used.
@@ -88,7 +135,9 @@ stdout will be used.
 -t --testout
     Instead of outputting the transformed input, the output contains 
     one line for conditional statement with the form:
-    <T or F>  <conditional statement>
+       <T or F>  <conditional statement>
+    where T or F is the value of conditional statement evaluated with
+    respect to the given 'defines' input.
 
 
 NOTE: Only one, and exactly one, of the '--deffile' and '--defline'
@@ -185,130 +234,10 @@ Actual javascript conditionals:
     In the special case where defines is "*", the function will not be 
     evaluated.
 
-`    
-    
-    
+For complete documentation see 
+    https://www.npmjs.com/package/reversible-preproc
+and 
+    https://www.npmjs.com/package/reversible-preproc-cli
 
-
-
-
+`
 }
-
-
-const argv = yargs
-    .command('$0', 'perform reversible pre proc on file', {
-        infile: {
-            description: 'input file',
-            alias: 'i',
-            type: 'string',
-        },
-        outfile: {
-            description: 'output file',
-            alias: 'o',
-            type: 'string',
-        },
-        defline: {
-            description: 'json to use as defines, passed as string',
-            alias: 'l',
-            type: 'string'
-        },
-        deffile: {
-            description: 'json to use as defines, read from file',
-            alias: 'f',
-            type: 'string'
-        }
-    })
-    .help()
-    .alias('help', 'h')
-    .parserConfiguration({'no-process-value':true})
-    .argv
-
-// const argv1 = yargs
-//     .command('$0', 'perform reversible pre proc on file', {
-//         infile: {
-//             description: 'input file',
-//             alias: 'i',
-//             type: 'string',
-//         },
-//         outfile: {
-//             description: 'output file',
-//             alias: 'o',
-//             type: 'string',
-//         },
-//         defline: {
-//             description: 'json to use as defines, passed as string',
-//             alias: 'l',
-//             type: 'string'
-//         },
-//         deffile: {
-//             description: 'json to use as defines, read from file',
-//             alias: 'f',
-//             type: 'string'
-//         }
-//     })
-//     .help()
-//     .alias('help', 'h')
-//     .parserConfiguration()
-//     .argv
-
-console.log("")
-
-async function PreProc(rpp, readable, writable) {
-    function makeThroughLineFunc(rpp) {
-        return (line, enc, next) => {
-            //console.log(line)
-            let [err, outline] = rpp.line(line)
-            //console.log(outline)
-            next(err, outline + '\n')
-        }
-    }
-    await events.once(
-        readable
-            .pipe(split2())
-            .pipe(through2.obj(makeThroughLineFunc(rpp)))
-            .pipe(writable),
-    'finish')
-}
-
-function ownKey(o,k){ return Reflect.ownKeys(o).includes(k) }
-function defined(x) { return x!==undefined }
-
-if (argv._.includes('pp')) {
-    console.log(argv)
-    // set up streams
-    let rawdata, readable, writable
-    if (argv.deffile!==undefined){
-        rawdata = fs.readFileSync(argv.deffile)
-    } else if (argv.defline!==undefined){
-        rawdata = argv.defline
-    } else {
-        throw Error('json define data not provided but is required')
-    }
-    let defJson = JSON.parse(rawdata)
-    console.log("The defines input is:")
-    console.log(JSON.stringify(defJson, 0, 2))
-    let rpp = new ReversiblePreproc(defJson)
-
-    if (argv.infile!==undefined){
-        readable = fs.createReadStream(argv.infile)
-    } else { // use stdin
-        readable = process.stdin   // ???
-    }
-    if (argv.outfile!==undefined){
-        writable = fs.createWriteStream(argv.outfile)
-    } else { // use stdin
-        writable = process.stdout   // ???
-    }
-
-    // fs.createReadStream(argv.infile)
-    //     .pipe(split2())
-    //     .on('data', function (line) {
-    //         let [err, lineout] = rpp.line(line)
-    //         if (err)
-    //             console.log(err)
-    //         console.log(lineout)            
-    //     })
-
-    PreProc(rpp, readable, writable)
-}
-

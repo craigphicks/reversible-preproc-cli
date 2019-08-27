@@ -1,34 +1,43 @@
 {
-  "name": "reversible-preproc-cli",
-  "version": "1.0.0",
-  "description": "CLI for reversible-preproc",
-  "main": "lib/index.js",
-  "directories": {
-    "test": "test"
-  },
-  "dependencies": {
-    "minimist": "^1.2.0",
-    "reversible-preproc": "^1.0.0",
-    "split2": "^3.1.1",
-    "through2": "^3.0.1",
-    "yargs": "^13.3.0",
-    "yargs-parser": "^13.1.1"
-  },
-  "devDependencies": {},
-  "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
-  },
-  "repository": {
-    "type": "git",
-    "url": "git+https://github.com/craigphicks/reversible-preproc-cli.git"
-  },
-  "keywords": [
-    "preprocessor"
-  ],
-  "author": "Craig P Hicks",
-  "license": "MIT",
-  "bugs": {
-    "url": "https://github.com/craigphicks/reversible-preproc-cli/issues"
-  },
-  "homepage": "https://github.com/craigphicks/reversible-preproc-cli#readme"
+	"name": "reversible-preproc-cli",
+	"version": "1.0.0",
+	"description": "CLI for reversible-preproc",
+	"main": "lib/index.js",
+	"files": [
+		"test-cjs.sh",
+		"test/*",
+		"test/data/*"
+	],
+	"directories": {
+		"lib":"lib",
+		"test": "test"
+	},
+	"dependencies": {
+		"minimist": "^1.2.0",
+		"reversible-preproc": "^1.0.3",
+		"split2": "^3.1.1",
+		"through2": "^3.0.1"
+	},
+	"devDependencies": {
+		"rollup": "^1.20.2",
+		"rollup-plugin-commonjs": "^10.1.0",
+		"rollup-plugin-node-resolve": "^5.2.0"
+	},
+	"scripts": {
+		"build": "rollup -c", 
+		"test": "./test-cjs.sh"
+	},
+	"repository": {
+		"type": "git",
+		"url": "git+https://github.com/craigphicks/reversible-preproc-cli.git"
+	},
+	"keywords": [
+		"preprocessor"
+	],
+	"author": "Craig P Hicks",
+	"license": "MIT",
+	"bugs": {
+		"url": "https://github.com/craigphicks/reversible-preproc-cli/issues"
+	},
+	"homepage": "https://github.com/craigphicks/reversible-preproc-cli#readme"
 }
