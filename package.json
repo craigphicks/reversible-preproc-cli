@@ -1,6 +1,6 @@
 {
 	"name": "reversible-preproc-cli",
-	"version": "1.0.2",
+	"version": "1.0.3",
 	"description": "CLI for reversible-preproc",
 	"main": "lib/index.js",
 	"files": [
@@ -14,7 +14,7 @@
 	},
 	"dependencies": {
 		"minimist": "^1.2.0",
-		"reversible-preproc": "file:../reversible-preproc/reversible-preproc-2.0.2.tgz",
+		"reversible-preproc": "^1.0.3",
 		"split2": "^3.1.1",
 		"through2": "^3.0.1"
 	},
