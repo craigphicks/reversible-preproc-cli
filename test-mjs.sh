@@ -19,7 +19,7 @@ echo "test 1 pass"
 cat test/data/test-data.js \
 	| node --experimental-modules \
 		   src/reversible-preproc-cli.mjs \
-		   -l '"*"' \
+		   -l '{"Cond1":true,"Cond2":false}' \
 		   > test/data/test-data.out2.js \
 		|| { echo " test 2 fail [3]" ; exit 3 ; }
 

@@ -72,7 +72,7 @@ async function PreProc(rpp, readable, writable, testOut) {
             //console.log(line)
             let [err, outline] = rpp.line(line)
             //console.log(outline)
-            outline = outline === null ? "" : outline + '\n'
+            outline = outline === null ? "" : outline
             next(err, outline)
         }
     }
@@ -107,10 +107,11 @@ reversible-preproc-cli ${reversible_preproc_cli_version}
         throw Error('json define data not provided but is required')
     }
     let defJson = JSON.parse(rawdata)
-    //    console.log("The defines input is:")
-    //    console.log(JSON.stringify(defJson, 0, 2))
+    //   console.log("The defines input is:")
+    //   console.log(JSON.stringify(defJson, 0, 2))
     let testOut = Reflect.ownKeys(argv).includes('testout')
-    let rpp = new ReversiblePreproc(defJson, { testMode: testOut })
+    //let rpp = new ReversiblePreproc(defJson, { testMode: testOut })
+    let rpp = new ReversiblePreproc(defJson)
 
     if (argv.infile !== undefined) {
         readable = fs.createReadStream(argv.infile)
