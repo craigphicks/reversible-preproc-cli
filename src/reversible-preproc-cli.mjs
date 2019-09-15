@@ -15,6 +15,8 @@ import parseArgs from 'minimist'
 //console.log('process.argv: ')
 //console.log(process.argv)
 
+let reversible_preproc_cli_version = "1.0.2"
+
 const argvMm = parseArgs(process.argv)
 //console.dir(argvMm)
 
@@ -29,6 +31,7 @@ margv.set('outfile', 'outfile')
 margv.set('deffile', 'deffile')
 margv.set('defline', 'defline')
 margv.set('testout', 'testout')
+margv.set('version', 'version')
 
 const argv = {}
 function readArgs() {
@@ -42,7 +45,7 @@ function readArgs() {
             if (Reflect.ownKeys(argv).includes(k)) {
                 throw `${k} or alias has already been given as argument`
             }
-            if (kt === 'defline' || kt === 'deffile')
+            if (kt === 'defline' || kt === 'deffile' || kt === 'version')
                 numdef++
             argv[kt] = argvMm[k]
         }
@@ -69,23 +72,31 @@ async function PreProc(rpp, readable, writable, testOut) {
             //console.log(line)
             let [err, outline] = rpp.line(line)
             //console.log(outline)
-            outline = outline===null ? "" : outline + '\n'
+            outline = outline === null ? "" : outline + '\n'
             next(err, outline)
         }
     }
     await events.once(
         readable
-            .pipe(split2())
+            .pipe(split2('\n'))
             .pipe(through2.obj(makeThroughLineFunc(rpp)))
             .pipe(writable),
         'finish')
 }
 
-function ownKey(o, k) { return Reflect.ownKeys(o).includes(k) }
-function defined(x) { return x !== undefined }
+//function ownKey(o, k) { return Reflect.ownKeys(o).includes(k) }
+//function defined(x) { return x !== undefined }
 {
+    if (argv.version) {
+        process.stdout.write(
+`
+reversible-preproc-cli ${reversible_preproc_cli_version}
+`
+        )
+        process.exit(0)
+    }
 
-//    console.log(argv)
+    //    console.log(argv)
     // set up streams
     let rawdata, readable, writable
     if (argv.deffile !== undefined) {
@@ -96,8 +107,8 @@ function defined(x) { return x !== undefined }
         throw Error('json define data not provided but is required')
     }
     let defJson = JSON.parse(rawdata)
-//    console.log("The defines input is:")
-//    console.log(JSON.stringify(defJson, 0, 2))
+    //    console.log("The defines input is:")
+    //    console.log(JSON.stringify(defJson, 0, 2))
     let testOut = Reflect.ownKeys(argv).includes('testout')
     let rpp = new ReversiblePreproc(defJson, { testMode: testOut })
 
@@ -138,6 +149,9 @@ stdout will be used.
        <T or F>  <conditional statement>
     where T or F is the value of conditional statement evaluated with
     respect to the given 'defines' input.
+
+--version
+    Print version number
 
 
 NOTE: Only one, and exactly one, of the '--deffile' and '--defline'

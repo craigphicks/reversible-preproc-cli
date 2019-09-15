@@ -73,3 +73,6 @@ The rest of this document describes the CLI arguments.
 NOTE: Only one, and exactly one, of the '--deffile' and '--defline'
 options can/must be used.
 
+
+changes:
+v1.0.1 Mofied to work with Windows style EOL ('\r\n').  
