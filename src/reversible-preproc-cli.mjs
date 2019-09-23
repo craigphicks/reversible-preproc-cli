@@ -35,99 +35,109 @@ margv.set('version', 'version')
 
 const argv = {}
 function readArgs() {
-    try {
-        let numdef = 0
-        for (let k of Reflect.ownKeys(argvMm)) {
-            if (k === '_') continue
-            let kt = margv.get(k)
-            if (kt === undefined)
-                throw `${k} is not a valid argument`
-            if (Reflect.ownKeys(argv).includes(k)) {
-                throw `${k} or alias has already been given as argument`
-            }
-            if (kt === 'defline' || kt === 'deffile' || kt === 'version')
-                numdef++
-            argv[kt] = argvMm[k]
-        }
-        if (numdef != 1) {
-            throw 'defines must be specified exactly once with --deffile or --defline'
-        }
+  try {
+    let numdef = 0
+    for (let k of Reflect.ownKeys(argvMm)) {
+      if (k === '_') continue
+      let kt = margv.get(k)
+      if (kt === undefined)
+        throw `${k} is not a valid argument`
+      if (Reflect.ownKeys(argv).includes(k)) {
+        throw `${k} or alias has already been given as argument`
+      }
+      if (kt === 'defline' || kt === 'deffile' || kt === 'version')
+        numdef++
+      argv[kt] = argvMm[k]
     }
-    catch (e) {
-        console.log(e)
-        showHelp()
+    if (numdef != 1) {
+      throw 'defines must be specified exactly once with --deffile or --defline'
     }
+  }
+  catch (e) {
+    console.log(e)
+    showHelp()
+  }
 }
 readArgs()
 //console.log(argv)
 
 
 function showHelp() {
-    process.stdout.write(helpTpl())
+  process.stdout.write(helpTpl())
 }
 
 async function PreProc(rpp, readable, writable, testOut) {
-    function makeThroughLineFunc(rpp) {
-        return (line, enc, next) => {
-            //console.log(line)
-            let [err, outline] = rpp.line(line)
-            //console.log(outline)
-            outline = outline === null ? "" : outline
-            next(err, outline)
-        }
+  function throughLineFunc(line, enc, callback, This) {
+    function pushLine(line) {
+      if (line)
+        This.push(line)
     }
-    await events.once(
-        readable
-            .pipe(split2('\n'))
-            .pipe(through2.obj(makeThroughLineFunc(rpp)))
-            .pipe(writable),
-        'finish')
+    //console.log(line)
+    let [err, _dummy] = rpp.line(line, pushLine)
+    //console.log(outline)
+    //outline = outline === null ? "" : outline
+    callback(err, null)
+  }
+  // await events.once(
+  //     readable
+  //         .pipe(split2('\n'))
+  //         .pipe(through2.obj(makeThroughLineFunc(rpp, this)))
+  //         .pipe(writable),
+  //     'finish')
+  await events.once(
+    readable
+      .pipe(split2('\n'))
+      .pipe(through2.obj(function (line, enc, callback) {
+        throughLineFunc(line, enc, callback, this)
+      }))
+      .pipe(writable),
+    'finish')
 }
 
 //function ownKey(o, k) { return Reflect.ownKeys(o).includes(k) }
 //function defined(x) { return x !== undefined }
 {
-    if (argv.version) {
-        process.stdout.write(
-`
+  if (argv.version) {
+    process.stdout.write(
+      `
 reversible-preproc-cli ${reversible_preproc_cli_version}
 `
-        )
-        process.exit(0)
-    }
+    )
+    process.exit(0)
+  }
 
-    //    console.log(argv)
-    // set up streams
-    let rawdata, readable, writable
-    if (argv.deffile !== undefined) {
-        rawdata = fs.readFileSync(argv.deffile)
-    } else if (argv.defline !== undefined) {
-        rawdata = argv.defline
-    } else {
-        throw Error('json define data not provided but is required')
-    }
-    let defJson = JSON.parse(rawdata)
-    //   console.log("The defines input is:")
-    //   console.log(JSON.stringify(defJson, 0, 2))
-    let testOut = Reflect.ownKeys(argv).includes('testout')
-    //let rpp = new ReversiblePreproc(defJson, { testMode: testOut })
-    let rpp = new ReversiblePreproc(defJson)
+  //    console.log(argv)
+  // set up streams
+  let rawdata, readable, writable
+  if (argv.deffile !== undefined) {
+    rawdata = fs.readFileSync(argv.deffile)
+  } else if (argv.defline !== undefined) {
+    rawdata = argv.defline
+  } else {
+    throw Error('json define data not provided but is required')
+  }
+  let defJson = JSON.parse(rawdata)
+  //   console.log("The defines input is:")
+  //   console.log(JSON.stringify(defJson, 0, 2))
+  let testOut = Reflect.ownKeys(argv).includes('testout')
+  //let rpp = new ReversiblePreproc(defJson, { testMode: testOut })
+  let rpp = new ReversiblePreproc(defJson)
 
-    if (argv.infile !== undefined) {
-        readable = fs.createReadStream(argv.infile)
-    } else { // use stdin
-        readable = process.stdin   // ???
-    }
-    if (argv.outfile !== undefined) {
-        writable = fs.createWriteStream(argv.outfile)
-    } else { // use stdin
-        writable = process.stdout   // ???
-    }
-    PreProc(rpp, readable, writable, testOut)
+  if (argv.infile !== undefined) {
+    readable = fs.createReadStream(argv.infile)
+  } else { // use stdin
+    readable = process.stdin   // ???
+  }
+  if (argv.outfile !== undefined) {
+    writable = fs.createWriteStream(argv.outfile)
+  } else { // use stdin
+    writable = process.stdout   // ???
+  }
+  PreProc(rpp, readable, writable, testOut)
 }
 
 function helpTpl() {
-    return `
+  return `
 Command line argumentsa:
 
 -i --infile <filename> 

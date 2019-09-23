@@ -14,18 +14,19 @@
 	},
 	"dependencies": {
 		"minimist": "^1.2.0",
-		"reversible-preproc": "file:../reversible-preproc/reversible-preproc-2.0.2.tgz",
+		"reversible-preproc": "file:../reversible-preproc/reversible-preproc-2.0.3.tgz",
 		"split2": "^3.1.1",
 		"through2": "^3.0.1"
 	},
 	"devDependencies": {
+		"dedent": "^0.7.0",
 		"rollup": "^1.20.2",
 		"rollup-plugin-commonjs": "^10.1.0",
 		"rollup-plugin-node-resolve": "^5.2.0"
 	},
 	"scripts": {
 		"build": "rollup -c",
-		"test": "./test-cjs.sh"
+		"test": "node ./test-cjs.js"
 	},
 	"repository": {
 		"type": "git",
