@@ -27,7 +27,7 @@ let package_version = "{{packageJson.name}} {{packageJson.version}}"
 let package_version = "reversible-preproc-cli <?>"
 //--endif
 let reversible_preproc_cli_version = package_version
-let reversible_preproc_version = Rpp.RppCore.queryVersion()
+let reversible_preproc_version = Rpp.Core.queryVersion()
 
 
 
@@ -56,68 +56,6 @@ margv.set('defline', symDefLine)
 margv.set('defenv', symDefEnv)
 margv.set('version', symVersion)
 margv.set('help', symHelp)
-
-
-
-//let nInfile = 0, nOutfile = 0
-
-function hasOwnKey(obj, key) {
-  return Reflect.getOwnPropertyDescriptor(obj, key) !== undefined
-}
-
-function LikelyTrueObject(obj) {
-  return (typeof obj === 'object'
-    && !(obj instanceof Array))
-}
-
-const symAssignJsonFilename = Symbol("AssignJsonFilename")
-const symAssignJsonRaw = Symbol("AssignJsonRaw")
-const symAssignJsonEnv = Symbol("AssignJsonEnv")
-function _AssignJson(object, keyname, string, sym) {
-  let raw, props
-  if (sym === symAssignJsonFilename)
-    raw = fs.readFileSync(string)
-  else if (sym === symAssignJsonRaw)
-    raw = string
-  else if (sym === symAssignJsonEnv)
-    props = process.env
-  else
-    throw Error("programmer error")
-
-  props = JSON.parse(raw)
-  let lhs = object
-  if (keyname) {
-    if (!hasOwnKey(object, keyname)
-      || !LikelyTrueObject(object[keyname]))
-      object[keyname] = {}
-    //Object.assign(obect[keyname],
-    lhs = object[keyname]
-  }
-  if (!LikelyTrueObject(props)) {
-    if (keyname)
-      lhs = props
-    else {
-      throw Error('cannot assign non-object to top level, ${filename}')
-    }
-  } else {
-    Object.assign(lhs, props)
-  }
-}
-function AssignJson(object, keyname, string, symIn) {
-  let sym
-  switch (symIn) {
-    case symDefFile: sym = symAssignJsonFilename; break
-    case symDefLine: sym = symAssignJsonRaw; break
-    case symDefEnv: sym = symAssignJsonEnv; break
-    default: throw Error("programmer error")
-  }
-  _AssignJson(object, keyname, string, sym)
-}
-
-// function createIdentifierRegex() {
-//   const core = "[$A-Z_][0-9A-Z_$]*"
-//   return RegExp(`^${core}(.${core})*`, 'i')
-// }
 
 class ArgsRepeatOptionsParse {
   emptyOpt() {
@@ -154,6 +92,21 @@ class ArgsRepeatOptionsParse {
   }
 }
 
+function AssignJson(object, keyname, string, symIn) {
+  switch (symIn) {
+    case symDefFile: 
+      Rpp.AssignJson.FromFile(object,keyname,string) 
+      break
+    case symDefLine: 
+      Rpp.AssignJson.FromRaw(object,keyname,string) 
+      break
+    case symDefEnv:
+      Rpp.AssignJson.FromEnv(object,keyname) 
+      break
+    default: throw Error("programmer error")
+  }
+}
+
 const arop = new ArgsRepeatOptionsParse()
 arop.parse(process.argv)
 
@@ -165,6 +118,8 @@ const argData = {
   writable: null,
   defines: {}
 }
+
+
 
 for (let opt of arop.opts) {
   //
@@ -218,7 +173,7 @@ async function PreProc(rpp, readable, writable) {
   try {
     await util.promisify(pipeline)(
       readable,
-      new Rpp.RppTransform(rpp),
+      new Rpp.Transform(rpp),
       writable
     )
     return null
@@ -228,7 +183,7 @@ async function PreProc(rpp, readable, writable) {
 }
 
 async function main() {
-  let rpp = new Rpp.RppCore(argData.defines)
+  let rpp = new Rpp.Core(argData.defines)
 
   if (!argData.readable) {
     argData.readable = process.stdin
