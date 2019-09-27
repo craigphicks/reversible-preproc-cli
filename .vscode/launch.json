@@ -22,27 +22,8 @@
         "${workspaceFolder}/test/data/in.demo0.js",
         "-o",
         "${workspaceFolder}/test/data/out.demo0.js",
-        "-f",
+        "-df",
         "${workspaceFolder}/test/data/defines.demo0.json"
-      ],
-      "runtimeArgs": [
-        "--experimental-modules"
-      ]
-    },
-    {
-      "type": "node",
-      "request": "launch",
-      "name": "cli defline *",
-      "program": "${workspaceFolder}/src/reversible-preproc-cli.mjs",
-      "console": "internalConsole",
-      "outputCapture": "std",
-      "args": [
-        "-i",
-        "${workspaceFolder}/test/data/test-data.js",
-        //"-o", "${workspaceFolder}/test/data/test-data.out.js", 
-        "-l",
-        "\"*\"",
-        "-t"
       ],
       "runtimeArgs": [
         "--experimental-modules"

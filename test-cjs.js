@@ -1,5 +1,5 @@
 'use strict'
-const dedent = require('dedent')
+//const dedent = require('dedent')
 const execSync = require('child_process').execSync
 const fs = require('fs')
 
@@ -17,7 +17,7 @@ const cmdArgs = [
      lib/index.js \
      -i test/data/test-data.js \
      -o test/data/test-data.out1.js \
-     -f test/data/test-defines.json \
+     -df test/data/test-defines.json \
 `,
   `    
   diff test/data/test-data.out1.js test/data/test-data.out1.expect.js \
@@ -26,7 +26,7 @@ const cmdArgs = [
   cat test/data/test-data.js \
     | node \
          lib/index.js \
-         -l '${getFileText("test/data/test-defines.json")}' \
+         -dl '${getFileText("test/data/test-defines.json")}' \
          > test/data/test-data.out1.js \
 `,
   `  
@@ -37,7 +37,7 @@ const cmdArgs = [
      lib/index.js \
      -i test/data/in.demo0.js \
      -o test/data/out.demo0.js \
-     -f test/data/defines.demo0.json \
+     -df test/data/defines.demo0.json \
 `,
   `    
   diff test/data/out.demo0.js test/data/exp.demo0.js \
