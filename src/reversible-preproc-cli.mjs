@@ -24,10 +24,10 @@ function _assert(cond, msg) {
 let package_version = "{{packageJson.name}} {{packageJson.version}}"
 --end*/
 //--else
-let package_version = "reversible-preproc-cli <?>"
+let package_version = "reversible-preproc-cli ?.?.?"
 //--endif
 let reversible_preproc_cli_version = package_version
-let reversible_preproc_version = Rpp.Core.queryVersion()
+let reversible_preproc_version = Rpp.queryVersion()
 
 
 
@@ -92,20 +92,6 @@ class ArgsRepeatOptionsParse {
   }
 }
 
-function AssignJson(object, keyname, string, symIn) {
-  switch (symIn) {
-    case symDefFile: 
-      Rpp.AssignJson.FromFile(object,keyname,string) 
-      break
-    case symDefLine: 
-      Rpp.AssignJson.FromRaw(object,keyname,string) 
-      break
-    case symDefEnv:
-      Rpp.AssignJson.FromEnv(object,keyname) 
-      break
-    default: throw Error("programmer error")
-  }
-}
 
 const arop = new ArgsRepeatOptionsParse()
 arop.parse(process.argv)
@@ -121,6 +107,7 @@ const argData = {
 
 
 
+var tmpDefs
 for (let opt of arop.opts) {
   //
   switch (opt.option) {
@@ -139,14 +126,25 @@ for (let opt of arop.opts) {
     case symDefFile:
     case symDefLine:
     case symDefEnv:
-      if (opt.optargs.length === 0)
-        AssignJson(argData.defines, null, null, opt.options)
-      else if (opt.optargs.length === 1 && opt.options === symDefEnv)
-        AssignJson(argData.defines, opt.optargs[0], null, opt.option)
-      else if (opt.optargs.length === 1)
-        AssignJson(argData.defines, null, opt.optargs[0], opt.option)
-      else if (opt.optargs.length === 2)
-        AssignJson(argData.defines, opt.optargs[0], opt.optargs[1], opt.option)
+      {
+        switch (opt.option) {
+          case symDefFile:
+            tmpDefs = JSON.parse(fs.readFileSync(opt.optargs.slice(-1)[0]))
+            break
+          case symDefLine:
+            tmpDefs = JSON.parse(opt.optargs.slice(-1)[0])
+            break
+          case symDefEnv:
+            tmpDefs = process.env
+            break
+        }
+        if (opt.optargs.length === 0
+          || (opt.optargs.length === 1 && opt.option !== symDefEnv)) {
+          Rpp.forceAssignRHS(argData.defines, null, tmpDefs)
+        } else {
+          Rpp.forceAssignRHS(argData.defines, opt.optargs[0], tmpDefs)
+        }
+      }
       break
     case symVersion:
       process.stdout.write(
