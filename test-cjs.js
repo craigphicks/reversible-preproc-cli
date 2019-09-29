@@ -14,7 +14,7 @@ const cmdArgs = [
 `,
   `
   node \
-     lib/index.js \
+     lib/rpp-cli.js \
      -i test/data/test-data.js \
      -o test/data/test-data.out1.js \
      -df test/data/test-defines.json \
@@ -25,7 +25,7 @@ const cmdArgs = [
   `  
   cat test/data/test-data.js \
     | node \
-         lib/index.js \
+         lib/rpp-cli.js \
          -dl '${getFileText("test/data/test-defines.json")}' \
          > test/data/test-data.out1.js \
 `,
@@ -34,7 +34,7 @@ const cmdArgs = [
 `,
   `
   node \
-     lib/index.js \
+     lib/rpp-cli.js \
      -i test/data/in.demo0.js \
      -o test/data/out.demo0.js \
      -df test/data/defines.demo0.json \
@@ -44,6 +44,9 @@ const cmdArgs = [
 `,
 
 ]
+
+
+
 try {
   var c,so
   for (c of cmdArgs) {

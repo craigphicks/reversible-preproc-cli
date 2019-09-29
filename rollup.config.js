@@ -8,7 +8,7 @@ export default [
 	{
 		input: "src/reversible-preproc-cli.mjs",
 		output: {
-			file: "lib/index.js",
+			file: "lib/rpp-cli.js",
 			format: "cjs"
 		}
 //		plugins:[

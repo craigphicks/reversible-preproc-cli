@@ -2,30 +2,35 @@
 	"name": "reversible-preproc-cli",
 	"version": "2.0.0",
 	"description": "CLI for reversible-preproc",
-	"main": "lib/index.js",
+  "main": "lib/rpp-cli.js",
+  "bin":{
+    "rpp-cli":"rpp-cli"
+  },
 	"files": [
 		"test-cjs.sh",
 		"test/*",
-		"test/data/*"
+		"test/data/*",
+		"reversible-preproc/reversible-preproc-2.0.4.tgz"
 	],
 	"directories": {
 		"lib": "lib",
 		"test": "test"
 	},
 	"dependencies": {
+		"dedent": "^0.7.0",
 		"minimist": "^1.2.0",
 		"reversible-preproc": "file:../reversible-preproc/reversible-preproc-2.0.4.tgz",
 		"split2": "^3.1.1",
 		"through2": "^3.0.1"
 	},
 	"devDependencies": {
-		"dedent": "^0.7.0",
 		"rollup": "^1.21.4",
 		"rollup-plugin-commonjs": "^10.1.0",
 		"rollup-plugin-node-resolve": "^5.2.0"
 	},
 	"scripts": {
-		"build": "rollup -c",
+    "dev-test": "./test-mjs.sh",
+		"build": "node ./build.js",
 		"test": "node ./test-cjs.js"
 	},
 	"repository": {

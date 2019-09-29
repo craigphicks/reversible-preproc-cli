@@ -81,14 +81,6 @@ class ArgsRepeatOptionsParse {
 
 //console.log(JSON.stringify(arop,null,2))
 
-function queryVersion() {
-  process.stdout.write(
-    dedent`
-        ${reversible_preproc_cli_version}
-        ${reversible_preproc_version}
-        `
-  )
-}
 
 function Parse2(arop) {
   const argData = {
@@ -137,7 +129,12 @@ function Parse2(arop) {
         }
         break
       case symVersion:
-        queryVersion()
+        process.stdout.write(
+          dedent`
+        ${reversible_preproc_cli_version}
+        ${reversible_preproc_version}
+        `
+        )
         process.exit(0)
         break
       case symHelp:
@@ -151,7 +148,7 @@ function Parse2(arop) {
 } // Parse2
 
 function showHelp() {
-  queryVersion()
+  let x = helpTpl()
   process.stdout.write(helpTpl())
   process.exit(0)
 }
@@ -191,7 +188,7 @@ async function main() {
 
   const arop = new ArgsRepeatOptionsParse()
   arop.parse(process.argv, margv)
-  if (arop.opts.length === 0) {
+  if (arop.opts.length===0){
     showHelp()
   }
 
