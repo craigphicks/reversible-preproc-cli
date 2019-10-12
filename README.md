@@ -49,30 +49,55 @@ The rest of this document describes the CLI arguments.
 
 ## CLI arguments
 
- - -i --infile <filename>
-    The file to be transformed.  If omitted *stdin* will be used.
 
- - -o --outfile <filename>
-    The file to which to write the transformed data. If omitted
-*stdout* will be used.
+Options must be preceded by one or two '-' (short or long both, 1 or 2)
+Options must not be concatenated; to each its own hyphen(s). 
+Some options can be repeated.
 
- - -f --deffile <filename>
-    The file containing the JSON variable properties.
+-i --infile <filename> 
+    The file to be transformed.  If omitted stdin will be used.
 
- - -l --defline <inline JSON>
-    To pass the JSON defines inline.  Due to the need to escape
-    quotations marks this option is only usefule for simple cases.
+-o --outfile <filename>
+    The file to which to write the transformed data. If omitted \
+stdout will be used.
 
- - -t --testout
-    Instead of outputting the transformed input, the output contains
-    one line for conditional statement with the form:
-    \<T or F\> \<the conditional statement\>
+-df --deffile [key] <filename>
+    A file containing JSON data which will be assigned to the "defines"\
+data passed to the reversible-preproc process.
+    If the optional [key] is present, defines[key] is the receiver of assignment,\
+otherwise defines top-level is the receiver.  
+    Assignment is using the Object.assigns() operation unless the rhs is \
+not an "true" object (typeof !=== 'object || instanceof Array)
+    Can be used multiple times, overwriting / merging with previous assignments,\
+in the command line order
+
+-dl --defline [key] <inline JSON>
+    To pass the JSON defines inline.  Otherwise same as 'deffile'
+
+-de --defenv [key] 
+    Use process.env as the data to assign.  
+    IMPORTANT: If [key] is not present the key 'env' will be automatically created for it,\
+it will NOT be assigned to defines top-level. Otherwise same as 'deffile'
+
+-v, --version
+    Print version number and quit 
+
+-h, --help
+    Show this help and quit.
+    Running the program with no arguments will result in same behavior. 
+
+-p, -pipe
+    If no options at all are provided, the program \
+will show help and quit.  Using '-p' prevents that behavior,\
+so it can used shell redirection and piping , e.g.
+        % rpp-cli -p < fileIn > fileOut\
+    Note that '-p' is not necessary if any argument is passed, e.g.
+        % rpp-cli -df fileDefines < fileIn > fileOut
+    works without '-p' 
+
+For complete documentation with preprocessing grammar see 
+    https://www.npmjs.com/package/reversible-preproc
+and 
+    https://www.npmjs.com/package/reversible-preproc-cli
 
 
-
-NOTE: Only one, and exactly one, of the '--deffile' and '--defline'
-options can/must be used.
-
-
-changes:
-v1.0.1 Mofied to work with Windows style EOL ('\r\n').  
